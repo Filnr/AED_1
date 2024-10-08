@@ -114,13 +114,6 @@ void menor_nota_entreAprovados(int nota[], int tamanho)
     }
     printf("Menor nota entre os aprovados: %d\n", menor_aprovado);
 }
-
-void porcentagem_aprovacao(int nota[], int tamanho)
-{
-    int quantidade_aprovados = aprovados(nota, tamanho);
-    float porcent_aprovacao = ((float)quantidade_aprovados / tamanho) * 100;
-    printf("A taxa de aprovação foi de %.1f\n", porcent_aprovacao);
-}
 int main(void)
 {
     int menorNota, maiorNota;
@@ -132,5 +125,4 @@ int main(void)
     resultado(acima_media(nota, n, media));
     resultado_maioresEmenores(menorNota, maiorNota);
     menor_nota_entreAprovados(nota, n);
-    porcentagem_aprovacao(nota, n);
 }
