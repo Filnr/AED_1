@@ -53,7 +53,6 @@ int calcula_media()
     float media;
     soma_idades(&soma, &quantidade);
     media = (float) soma / (float) quantidade;
-    printf("%d\n", media);
     return media;
 }
 
