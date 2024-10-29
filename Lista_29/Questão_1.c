@@ -144,7 +144,6 @@ int main(void)
     Pessoa pessoas[MAX];
     int op = menu();
     backupDados(cadastrosN, cadastrosI, tam, pessoas);
-    printf("tam = %d\n\n\n", TAM);
     while (op != 0)
     {
         switch (op)
