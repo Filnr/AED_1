@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdbool.h>
+#include <locale.h>
 const int MAX = 100; // Constante global: tamanho físico
 int TAM = 0;         // Variável global: tamanho lógico
 
@@ -138,6 +139,7 @@ void salvaDados()
 
 int main(void)
 {
+    setlocale(LC_ALL, "");
     FILE *cadastrosN;
     FILE *tam;
     FILE *cadastrosI;
