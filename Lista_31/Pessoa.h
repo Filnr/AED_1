@@ -24,35 +24,29 @@ void listar_pessoas(Pessoa pessoas[])
     }
 }
 
-void cadastraNome(Pessoa pessoas[], FILE *cadastro)
+void cadastraNome(Pessoa pessoas[])
 {
     printf("Digite o nome da pessoa: ");
     while (getchar() != '\n')
         ; // Clear the input buffer
     fgets(pessoas[TAM].nome, sizeof(pessoas[TAM].nome), stdin);
-    cadastro = fopen("cadastroNome.dat", "a");
-    fprintf(cadastro, "%s", pessoas[TAM].nome);
-    fclose(cadastro);
 }
 
-void cadastraIdades(Pessoa pessoas[], FILE *cadastro)
+void cadastraIdades(Pessoa pessoas[])
 {
     printf("Digite a data de nascimento: ");
     scanf("%d/%d/%d", &pessoas[TAM].dataNascimento.dia, &pessoas[TAM].dataNascimento.mes, &pessoas[TAM].dataNascimento.ano);
-    cadastro = fopen("cadastroIdade.dat", "a");
-    fprintf(cadastro, "%d/%d/%d\n", pessoas[TAM].dataNascimento.dia, pessoas[TAM].dataNascimento.mes, pessoas[TAM].dataNascimento.ano);
-    fclose(cadastro);
 }
 
-void cadastraPessoas(Pessoa pessoas[], FILE *cadastrosN, FILE *cadastrosI)
+void cadastraPessoas(Pessoa pessoas[])
 {
     if (TAM >= MAX) {
         printf("Limite de cadastro atingido!\n");
     } 
     else 
     {
-        cadastraNome(pessoas, cadastrosN);
-        cadastraIdades(pessoas, cadastrosI);
+        cadastraNome(pessoas);
+        cadastraIdades(pessoas);
         TAM++;
     }
 }
