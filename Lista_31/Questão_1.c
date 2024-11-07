@@ -5,58 +5,47 @@
 #include "data.h"
 #include "Pessoa.h"
 #include "definicoes.h"
-void backupDados(FILE *cadastrosN, FILE *cadastrosI, FILE *tamanho, Pessoa pessoas[])
+void backupDados(Pessoa pessoas[])
 {
-    int qtPessoas = 0;
-    tamanho = fopen("qtRegistros.dat", "r");
-    if (tamanho == NULL) 
+    FILE *arqTamanho = fopen("qtRegistros.dat", "rb");
+    if (arqTamanho == NULL)
     {
-        tamanho = fopen("qtRegistros.dat", "w");
-        fprintf(tamanho, "0");
-        fclose(tamanho);
+        arqTamanho = fopen("qtRegistros.dat", "wb");
+        TAM = 0;
+        fprintf(arqTamanho, "%i", TAM);
     }
     else
     {
-        fscanf(tamanho, "%d", &qtPessoas);
-        fclose(tamanho);
+        fscanf(arqTamanho, "%i", &TAM);
     }
-    cadastrosN = fopen("cadastroNome.dat", "r");
-    if (cadastrosN != NULL)
-    {
-        for (int i = 0; i < qtPessoas; i++)
-        {
-            fgets(pessoas[i].nome, sizeof(pessoas[i].nome), cadastrosN);
-        }
-    }
+    fclose(arqTamanho);
 
-    fclose(cadastrosN);
-    cadastrosI = fopen("cadastroIdade.dat", "r");
-    if (cadastrosI != NULL)
-    {
-        for (int i = 0; i < qtPessoas; i++)
-        {
-            fscanf(cadastrosI, "%d/%d/%d", &pessoas[i].dataNascimento.dia, &pessoas[i].dataNascimento.mes, &pessoas[i].dataNascimento.ano);
-        }
-    }
-    fclose(cadastrosI);
+    FILE *arqPessoas = fopen("pessoas.dat", "rb+");
 
-    TAM = qtPessoas;
+    if (arqPessoas == NULL)
+    {
+        arqPessoas = fopen("pessoas.dat", "wb+");
+    }
+    fread(pessoas, sizeof(Pessoa), TAM, arqPessoas);
+    fclose(arqPessoas);
 }
 
 void apagaDados()
 {
-    FILE *idades = fopen("cadastroIdade.dat", "w");
-    fclose(idades);
-    FILE *nomes = fopen("cadastroNome.dat", "w");
-    fclose(nomes);
+    FILE *arqPessoas = fopen("pessoas.dat", "wb");
+    fclose(arqPessoas);
     FILE *registros = fopen("qtRegistros.dat", "w");
     fclose(registros);
     TAM = 0;
 }
 
-void salvaDados()
+void salvaDados(Pessoa pessoas[])
 {
-    FILE* tam = fopen("qtRegistros.dat", "w");
+    FILE *arqPessoas = fopen("pessoas.dat", "wb");
+    fwrite(pessoas, sizeof(Pessoa), TAM, arqPessoas);
+    fclose(arqPessoas);
+
+    FILE *tam = fopen("qtRegistros.dat", "wb");
     fprintf(tam, "%d", TAM);
     fclose(tam);
 }
@@ -81,18 +70,15 @@ int menu()
 int main(void)
 {
     setlocale(LC_ALL, "");
-    FILE *cadastrosN;
-    FILE *tam;
-    FILE *cadastrosI;
     Pessoa pessoas[MAX];
     int op = menu();
-    backupDados(cadastrosN, cadastrosI, tam, pessoas);
+    backupDados(pessoas);
     while (op != 0)
     {
         switch (op)
         {
         case 1:
-            cadastraPessoas(pessoas, cadastrosN, cadastrosI);
+            cadastraPessoas(pessoas);
             break;
         case 2:
             listar_pessoas(pessoas);
@@ -101,11 +87,10 @@ int main(void)
             apagaDados();
         case 4:
             printf("O mes %s digitado tem %d dias, sendo o dia uma %s", mesExtenso(pessoas[TAM - 1].dataNascimento), diasMes(pessoas[TAM - 1].dataNascimento), diaSemana(pessoas[TAM - 1].dataNascimento));
-
         }
         op = menu();
     }
     printf("Obrigado por utilizar esse programa");
-    salvaDados();
+    salvaDados(pessoas);
     return 0;
 }
