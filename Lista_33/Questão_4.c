@@ -1,6 +1,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <ctype.h>
+#include <stdbool.h>
 #define MAX_STR 50
 #define TAM 5
 
@@ -10,46 +11,43 @@ typedef struct
     int idade;
 }Pessoa;
 
-typedef struct 
-{
-    char nome[MAX_STR];
-}Clone;
-
-void primeiroNome(Pessoa pessoas[], Clone primeirosNomes[])
-{
-    int j;
-    for(int i = 0; i < TAM; i++)
-    {
-        j = 0;
-        while(pessoas[i].nome[j] != ' ' && pessoas[i].nome[j] != '\0')
-        {
-            primeirosNomes[i].nome[j] = toupper(pessoas[i].nome[j]);
-            j++;
-        }
-        primeirosNomes[i].nome[j] = '\0';
-        
-    }
-}
-
 void exibiPessoa(Pessoa pessoas)
 {
     printf("Nome: %s\n", pessoas.nome);
     printf("Idade: %d\n\n", pessoas.idade);
 }
 
-void buscaRec(Pessoa pessoas[], int posicao, char* chaveNome, Clone primeiroNome[])
+bool strIguais(char pessoas[], char chave[])
 {
-    if((strcmp(primeiroNome[posicao].nome, chaveNome) == 0) && posicao < TAM) exibiPessoa(pessoas[posicao]);
-    else if(posicao == TAM) printf("Nome nao encontrado\n");
-    else
+    bool iguais = true;
+    int i = 0;
+    while(chave[i] != '\0' && pessoas[i] != '\0' && i < MAX_STR && iguais)
     {
-        buscaRec(pessoas, posicao + 1, chaveNome, primeiroNome);
+        if(toupper(chave[i]) != toupper(pessoas[i])){
+            iguais = false;
+        }
+        i++;
     }
+    return iguais;
 }
 
-void chamaRec(Pessoa pessoas[], char* chave, Clone primeirosNomes[])
+void buscaRec(Pessoa pessoas[], int posicao, char* chaveNome)
 {
-    buscaRec(pessoas, 0, chave, primeirosNomes);
+    if(posicao == TAM - 1 && strIguais(pessoas[posicao].nome, chaveNome)){
+            exibiPessoa(pessoas[posicao]);
+    }
+    else if(posicao < TAM){
+        if(strIguais(pessoas[posicao].nome, chaveNome)){
+            exibiPessoa(pessoas[posicao]);
+        }
+        buscaRec(pessoas,posicao + 1, chaveNome);
+    }
+    else printf("Nome nao encontrado\n");
+}
+
+void chamaRec(Pessoa pessoas[], char* chave)
+{
+    buscaRec(pessoas, 0, chave);
 }
 
 void criaChave(char chave[])
@@ -74,7 +72,5 @@ int main(void)
         {"Carlos Oliveira", 19},
         {"Ana Pereira", 22},
         {"Lucas Mendes", 25}};
-    Clone primeirosNomes[TAM];
-    primeiroNome(pessoas, primeirosNomes);
-    chamaRec(pessoas, chave, primeirosNomes);
+    chamaRec(pessoas, chave);
 }
