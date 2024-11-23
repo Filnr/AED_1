@@ -3,6 +3,8 @@
     "files.associations": {
         "stdbool.h": "c",
         "iostream": "cpp",
-        "xstring": "cpp"
+        "xstring": "cpp",
+        "istream": "cpp",
+        "string": "cpp"
     }
 }

@@ -11,6 +11,7 @@ private:
     int dia;
     int mes;
     int ano;
+
 public:
     Data() : dia(0), mes(0), ano(0) {};
     void setData(int dia, int mes, int ano);
@@ -24,6 +25,7 @@ class Pessoa
 private:
     string nome;
     Data dataNascimento;
+
 public:
     Pessoa() : nome(""), dataNascimento() {};
     void setNome(const string &nome);
@@ -36,7 +38,7 @@ void setNomePessoa(Pessoa pessoas[], int posicao)
 {
     string nome;
     cout << "Digite o nome da pessoa: ";
-    cin.ignore(); // Ignora qualquer caractere pendente no buffer de entrada
+    cin.ignore();       // Ignora qualquer caractere pendente no buffer de entrada
     getline(cin, nome); // Usa getline para ler o nome completo
     pessoas[posicao].setNome(nome);
 }
@@ -59,7 +61,7 @@ void setPessoa(Pessoa pessoas[], int posicao)
 
 void Data::setData(int dia, int mes, int ano)
 {
-    if((dia > 0 && dia <= 31) && (mes > 0 && mes < 13) && ano > 0)
+    if ((dia > 0 && dia <= 31) && (mes > 0 && mes < 13) && ano > 0)
     {
         this->dia = dia;
         this->mes = mes;
@@ -171,15 +173,15 @@ int main()
     carregaDados(pessoas);
 
     int op = menu();
-    while(op != 0)
+    while (op != 0)
     {
-        switch(op)
+        switch (op)
         {
         case 1:
             setPessoa(pessoas, TAM);
             break;
         case 2:
-            for(int i = 0; i < TAM; i++)
+            for (int i = 0; i < TAM; i++)
             {
                 string nome = pessoas[i].getNome();
                 int dia, mes, ano;
