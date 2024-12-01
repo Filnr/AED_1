@@ -29,9 +29,10 @@ private:
 
 public:
     static int TAM;
-    Pessoa() : nome(""), dataNascimento() {};
-    Pessoa(string nome, int dia,  int mes, int ano) : nome(nome), dataNascimento(dia, mes, ano) {};
-    Pessoa(string nome) : nome(nome), dataNascimento(0) {};
+    Pessoa() : nome(""), dataNascimento() { TAM++; };
+    Pessoa(string nome, int dia, int mes, int ano) : nome(nome), dataNascimento(dia, mes, ano) { TAM++; };
+    Pessoa(string nome) : nome(nome), dataNascimento(0) { TAM++; };
+    ~Pessoa() { TAM--; };
     void setNome(const string &nome);
     string getNome();
     void setDataNascimento(int dia, int mes, int ano);
@@ -60,9 +61,9 @@ void setPessoaData(Pessoa *pessoas[], int posicao)
 
 void setPessoa(Pessoa *pessoas[], int posicao)
 {
+    pessoas[posicao] = new Pessoa();
     setNomePessoa(pessoas, posicao);
     setPessoaData(pessoas, posicao);
-    Pessoa::TAM++;
 }
 
 void Data::setData(int dia, int mes, int ano)
@@ -134,47 +135,63 @@ int menu()
 void carregaDados(Pessoa *pessoas[])
 {
     FILE *tam = fopen("qtRegistros.dat", "rb");
-    if (tam == NULL) // Verificando se o arquivo foi aberto corretamente
+    if (tam == NULL)
     {
         FILE *tam = fopen("qtRegistros.dat", "wb");
         fprintf(tam, "%d", 0);
+        fclose(tam);
     }
-    fscanf(tam, "%d", &Pessoa::TAM); // Lê o número de registros
+    int qtRegistros;
+    fscanf(tam, "%d", &qtRegistros);
     fclose(tam);
-
-    for(int i = 0; i < Pessoa::TAM; i++)
-    {
-        pessoas[i] = new Pessoa();
-    }
-
+    Pessoa::TAM = qtRegistros;
     FILE *cadastros = fopen("cadastros.dat", "rb");
-    if (cadastros == NULL) // Verificação se o arquivo binário de cadastros existe
+    if (cadastros != NULL)
     {
-        cout << "Erro ao abrir cadastros.dat" << endl;
-        exit(1);
+        for (int i = 0; i < qtRegistros; i++)
+        {
+            int tamNome;
+            fread(&tamNome, sizeof(int), 1, cadastros);
+            char *buffer = new char[tamNome + 1];
+            fread(buffer, sizeof(char), tamNome, cadastros);
+            buffer[tamNome] = '\0';
+            string nome(buffer);
+            delete[] buffer;
+            int dia, mes, ano;
+            fread(&dia, sizeof(int), 1, cadastros);
+            fread(&mes, sizeof(int), 1, cadastros);
+            fread(&ano, sizeof(int), 1, cadastros);
+            pessoas[i] = new Pessoa(nome, dia, mes, ano);
+        }
     }
-    fread(pessoas, sizeof(Pessoa), Pessoa::TAM, cadastros); // Lê os cadastros de pessoas
     fclose(cadastros);
 }
 
 void salvaDados(Pessoa *pessoas[])
 {
     FILE *tam = fopen("qtRegistros.dat", "wb");
-    if (tam == !NULL)
+    if (tam != NULL)
     {
         fprintf(tam, "%d", Pessoa::TAM);
+        cout << "Salvando " << Pessoa::TAM << " registros" << endl;
     }
     else
         cout << "Erro ao abrir qtRegistros.dat" << endl;
     fclose(tam);
 
     FILE *cadastros = fopen("cadastros.dat", "wb");
-    if (cadastros == !NULL) 
+    for (int i = 0; i < Pessoa::TAM; i++)
     {
-        fwrite(pessoas, sizeof(Pessoa), Pessoa::TAM, cadastros);
+        string nome = pessoas[i]->getNome();
+        int dia, mes, ano;
+        pessoas[i]->getDataNascimento(dia, mes, ano);
+        int tamNome = nome.size();
+        fwrite(&tamNome, sizeof(int), 1, cadastros);
+        fwrite(nome.c_str(), sizeof(char), tamNome, cadastros);
+        fwrite(&dia, sizeof(int), 1, cadastros);
+        fwrite(&mes, sizeof(int), 1, cadastros);
+        fwrite(&ano, sizeof(int), 1, cadastros);
     }
-    else
-         cout << "Erro ao abrir cadastros.dat" << endl;
     fclose(cadastros);
 }
 
@@ -189,15 +206,17 @@ void listaPessoa(Pessoa *pessoas[])
         cout << "Nome: " << nome << endl;
         cout << "Data de nascimento: " << dia << "/" << mes << "/" << ano << endl;
     }
-    cout << "----------------------" << endl << endl;
+    cout << "----------------------" << endl
+         << endl;
 }
 
 void encerraPrograma(Pessoa *pessoas[])
 {
     cout << "Obrigado por utilizar o programa" << endl;
     salvaDados(pessoas); // Salva os dados no arquivo
-    for(int i = 0; i < Pessoa::TAM; i++)
+    for (int i = 0; i < Pessoa::TAM; i++)
     {
+        cout << "Deletando pessoa " << pessoas[i]->getNome() << endl;
         delete pessoas[i];
     }
 }
