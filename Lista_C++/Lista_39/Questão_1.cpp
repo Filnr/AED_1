@@ -1,26 +1,20 @@
 #include <iostream>
 #include <string>
 using namespace std;
+
 #define MAX 100
 
 class Data
 {
 private:
-    int dia, mes, ano;
+    int dia;
+    int mes;
+    int ano;
 
 public:
-    Data()
-    {
-        dia = mes = ano = 0;
-    }
-    Data(int dia, int mes, int ano)
-    {
-        this->setData(dia, mes, ano);
-    }
-    Data(int ano)
-    {
-        this->setData(0, 0, ano);
-    }
+    Data() : dia(0), mes(0), ano(0) {};
+    Data(int dia, int mes, int ano) : dia(dia), mes(mes), ano(ano) {};
+    Data(int ano) : dia(0), mes(0), ano(ano) {};
     void setData(int dia, int mes, int ano);
     int getDia();
     int getMes();
@@ -35,27 +29,9 @@ private:
 
 public:
     static int TAM;
-    Pessoa()
-    {
-        nome = "";
-        dataNascimento = Data();
-    }
-    Pessoa(string nome, int dia, int mes, int ano)
-    {
-        this->setNome(nome);
-        this->setDataNascimento(dia, mes, ano);
-        TAM++;
-    }
-    Pessoa(string nome)
-    {
-        this->setNome(nome);
-        this->setDataNascimento(0, 0, 0);
-        TAM++;
-    }
-    ~Pessoa()
-    {
-        TAM--;
-    }
+    Pessoa() : nome(""), dataNascimento() {};
+    Pessoa(string nome, int dia,  int mes, int ano) : nome(nome), dataNascimento(dia, mes, ano) {};
+    Pessoa(string nome) : nome(nome), dataNascimento(0) {};
     void setNome(const string &nome);
     string getNome();
     void setDataNascimento(int dia, int mes, int ano);
@@ -64,22 +40,29 @@ public:
 
 int Pessoa::TAM = 0;
 
-void setNomePessoa(Pessoa pessoas[], int posicao)
+void setNomePessoa(Pessoa *pessoas[], int posicao)
 {
     string nome;
     cout << "Digite o nome da pessoa: ";
     cin.ignore();       // Ignora qualquer caractere pendente no buffer de entrada
     getline(cin, nome); // Usa getline para ler o nome completo
-    pessoas[posicao].setNome(nome);
+    pessoas[posicao]->setNome(nome);
 }
 
-void setPessoaData(Pessoa pessoas[], int posicao)
+void setPessoaData(Pessoa *pessoas[], int posicao)
 {
     int dia, mes, ano;
     char delimiter;
     cout << "Digite a data de nascimento (dia/mes/ano): ";
     cin >> dia >> delimiter >> mes >> delimiter >> ano;
-    pessoas[posicao].setDataNascimento(dia, mes, ano);
+    pessoas[posicao]->setDataNascimento(dia, mes, ano);
+}
+
+void setPessoa(Pessoa *pessoas[], int posicao)
+{
+    setNomePessoa(pessoas, posicao);
+    setPessoaData(pessoas, posicao);
+    Pessoa::TAM++;
 }
 
 void Data::setData(int dia, int mes, int ano)
@@ -93,6 +76,9 @@ void Data::setData(int dia, int mes, int ano)
     else
     {
         cout << "Data invalida, definindo a data como 0/0/0" << endl;
+        this->dia = 0;
+        this->mes = 0;
+        this->ano = 0;
     }
 }
 
@@ -147,98 +133,74 @@ int menu()
 
 void carregaDados(Pessoa *pessoas[])
 {
+    FILE *tam = fopen("qtRegistros.dat", "rb");
+    if (tam == NULL) // Verificando se o arquivo foi aberto corretamente
+    {
+        FILE *tam = fopen("qtRegistros.dat", "wb");
+        fprintf(tam, "%d", 0);
+    }
+    fscanf(tam, "%d", &Pessoa::TAM); // Lê o número de registros
+    fclose(tam);
+
+    for(int i = 0; i < Pessoa::TAM; i++)
+    {
+        pessoas[i] = new Pessoa();
+    }
+
     FILE *cadastros = fopen("cadastros.dat", "rb");
-    if (cadastros == NULL)
+    if (cadastros == NULL) // Verificação se o arquivo binário de cadastros existe
     {
-        cout << "Nenhum dado foi carregado." << endl;
-        Pessoa::TAM = 0;
-        return;
+        cout << "Erro ao abrir cadastros.dat" << endl;
+        exit(1);
     }
-
-    fread(&Pessoa::TAM, sizeof(int), 1, cadastros); // Lê o número de registros
-    for (int i = 0; i < Pessoa::TAM; i++)
-    {
-        pessoas[i] = new Pessoa(); // Aloca um novo objeto
-        fread(pessoas[i], sizeof(Pessoa), 1, cadastros); // Lê cada objeto
-    }
-
+    fread(pessoas, sizeof(Pessoa), Pessoa::TAM, cadastros); // Lê os cadastros de pessoas
     fclose(cadastros);
 }
-
 
 void salvaDados(Pessoa *pessoas[])
 {
+    FILE *tam = fopen("qtRegistros.dat", "wb");
+    if (tam == !NULL)
+    {
+        fprintf(tam, "%d", Pessoa::TAM);
+    }
+    else
+        cout << "Erro ao abrir qtRegistros.dat" << endl;
+    fclose(tam);
+
     FILE *cadastros = fopen("cadastros.dat", "wb");
-    if (cadastros == NULL)
+    if (cadastros == !NULL) 
     {
-        cout << "Erro ao abrir cadastros.dat para salvar." << endl;
-        return;
+        fwrite(pessoas, sizeof(Pessoa), Pessoa::TAM, cadastros);
     }
-
-    fwrite(&Pessoa::TAM, sizeof(int), 1, cadastros); // Salva o número de registros
-    for (int i = 0; i < Pessoa::TAM; i++)
-    {
-        fwrite(pessoas[i], sizeof(Pessoa), 1, cadastros); // Salva cada objeto
-    }
-
+    else
+         cout << "Erro ao abrir cadastros.dat" << endl;
     fclose(cadastros);
 }
 
-
-void setPessoa(Pessoa *pessoas[])
+void listaPessoa(Pessoa *pessoas[])
 {
-    if (Pessoa::TAM < MAX)
-    {
-        string nome;
-        cout << "Digite o nome da pessoa: ";
-        cin.ignore();
-        getline(cin, nome); // Para ler nomes compostos
-
-        int dia, mes, ano;
-        cout << "Digite a data de nascimento (dia/mes/ano): ";
-        cin >> dia;
-        cin.ignore(); // Ignora o '/'
-        cin >> mes;
-        cin.ignore(); // Ignora o '/'
-        cin >> ano;
-
-        pessoas[Pessoa::TAM] = new Pessoa(nome, dia, mes, ano);
-    }
-    else
-    {
-        cout << "Limite de pessoas atingido!" << endl;
-    }
-}
-
-void listaPessoas(Pessoa *pessoas[])
-{
-    if (Pessoa::TAM == 0)
-    {
-        cout << "Nenhuma pessoa cadastrada" << endl;
-        return;
-    }
-
     for (int i = 0; i < Pessoa::TAM; i++)
     {
-        cout << "Nome: " << pessoas[i]->getNome() << endl;
+        string nome = pessoas[i]->getNome();
         int dia, mes, ano;
         pessoas[i]->getDataNascimento(dia, mes, ano);
-        cout << "Data de nascimento: " << dia << "/" << mes << "/" << ano << endl;
         cout << "----------------------" << endl;
+        cout << "Nome: " << nome << endl;
+        cout << "Data de nascimento: " << dia << "/" << mes << "/" << ano << endl;
     }
+    cout << "----------------------" << endl << endl;
 }
 
 void encerraPrograma(Pessoa *pessoas[])
 {
-    salvaDados(pessoas);
-    for (int i = 0; i < Pessoa::TAM; i++)
+    cout << "Obrigado por utilizar o programa" << endl;
+    salvaDados(pessoas); // Salva os dados no arquivo
+    for(int i = 0; i < Pessoa::TAM; i++)
     {
         delete pessoas[i];
-        pessoas[i] = nullptr;
     }
-    cout << "Obrigado por utilizar o programa" << endl; 
 }
-
 
 int main()
 {
@@ -251,13 +213,14 @@ int main()
         switch (op)
         {
         case 1:
-            setPessoa(pessoas);
+            setPessoa(pessoas, Pessoa::TAM);
             break;
         case 2:
-            listaPessoas(pessoas);
+            listaPessoa(pessoas);
             break;
         case 3:
-            Pessoa::TAM = 0; // Apaga todos os registros
+            cout << "Dados Apagados" << endl;
+            Pessoa::TAM = 0;
             break;
         default:
             cout << "Opcao invalida" << endl;
@@ -265,5 +228,6 @@ int main()
         }
         op = menu(); // Atualiza a opção
     }
+    encerraPrograma(pessoas);
     return 0;
 }
