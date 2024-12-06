@@ -32,7 +32,7 @@ private:
 public:
     static int TAM;
     Pessoa() : nome(""), dataNascimento(), cpf("") { TAM++; };
-    Pessoa(string nome, int dia, int mes, int ano) : nome(nome), dataNascimento(dia, mes, ano) { TAM++; };
+    Pessoa(string nome, string cpf, int dia, int mes, int ano) : nome(nome), cpf(cpf), dataNascimento(dia, mes, ano) { TAM++; };
     Pessoa(string nome) : nome(nome), dataNascimento(0) { TAM++; };
     ~Pessoa() { TAM--; };
     void setNome(const string &nome);
@@ -224,18 +224,15 @@ void carregaDados(Pessoa *pessoas[])
     {
         for (int i = 0; i < qtRegistros; i++)
         {
-            int tamNome;
-            fread(&tamNome, sizeof(int), 1, cadastros);
-            char *buffer = new char[tamNome + 1];
-            fread(buffer, sizeof(char), tamNome, cadastros);
-            buffer[tamNome] = '\0';
-            string nome(buffer);
-            delete[] buffer;
+            string nome;
             int dia, mes, ano;
-            fread(&dia, sizeof(int), 1, cadastros);
-            fread(&mes, sizeof(int), 1, cadastros);
-            fread(&ano, sizeof(int), 1, cadastros);
-            pessoas[i] = new Pessoa(nome, dia, mes, ano);
+            string cpf;
+            fscanf(cadastros, "%s\n", &nome);
+            fscanf(cadastros, "%s\n", &cpf);
+            fscanf(cadastros, "%d\n", &dia);
+            fscanf(cadastros, "%d\n", &mes);
+            fscanf(cadastros, "%d\n", &ano);
+            pessoas[i] = new Pessoa(nome, cpf, dia, mes, ano);
         }
     }
     fclose(cadastros);
@@ -258,13 +255,13 @@ void salvaDados(Pessoa *pessoas[])
     {
         string nome = pessoas[i]->getNome();
         int dia, mes, ano;
+        string cpf = pessoas[i]->getCPF();
         pessoas[i]->getDataNascimento(dia, mes, ano);
-        int tamNome = nome.size();
-        fwrite(&tamNome, sizeof(int), 1, cadastros);
-        fwrite(nome.c_str(), sizeof(char), tamNome, cadastros);
-        fwrite(&dia, sizeof(int), 1, cadastros);
-        fwrite(&mes, sizeof(int), 1, cadastros);
-        fwrite(&ano, sizeof(int), 1, cadastros);
+        fprintf(cadastros, "%s\n", nome);
+        fprintf(cadastros, "%s\n", cpf);
+        fprintf(cadastros, "%d\n", dia);
+        fprintf(cadastros, "%d\n", mes);
+        fprintf(cadastros, "%d\n", ano);
     }
     fclose(cadastros);
 }
@@ -323,9 +320,9 @@ void pesquisaCPF(Pessoa *pessoas[])
     string cpfProcurado;
     leCPF(cpfProcurado, "pessoa desejada");
     int i = 0;
-    while(i < Pessoa::TAM && !encontrado)
+    while (i < Pessoa::TAM && !encontrado)
     {
-        if(pessoas[i]->getCPF() == cpfProcurado)
+        if (pessoas[i]->getCPF() == cpfProcurado)
         {
             cout << "----------------------" << endl;
             cout << "Nome: " << pessoas[i]->getNome() << endl;
@@ -337,7 +334,7 @@ void pesquisaCPF(Pessoa *pessoas[])
         }
         i++;
     }
-    if(!encontrado)
+    if (!encontrado)
     {
         cout << "Nenhuma pessoa encontrada com o CPF: " << cpfProcurado << endl;
     }
@@ -345,7 +342,7 @@ void pesquisaCPF(Pessoa *pessoas[])
 
 void shiftPessoas(Pessoa *pessoas[], int posicao)
 {
-    for(int i = posicao; i < Pessoa::TAM - 1; i++)
+    for (int i = posicao; i < Pessoa::TAM - 1; i++)
     {
         pessoas[i] = pessoas[i + 1];
     }
@@ -358,9 +355,10 @@ void excluiPessoa(Pessoa *pessoas[])
     string CPF;
     leCPF(CPF, "pessoa a ser excluida");
     int i = 0, tam = Pessoa::TAM;
-    while(i < tam && !encontrado)
+    while (i < tam && !encontrado)
     {
-        if(pessoas[i]->getCPF() == CPF){
+        if (pessoas[i]->getCPF() == CPF)
+        {
             cout << "Pessoa excluida: " << pessoas[i]->getNome() << endl;
             pessoas[i]->deletaPessoas();
             shiftPessoas(pessoas, i);
@@ -372,7 +370,7 @@ void excluiPessoa(Pessoa *pessoas[])
             i++; // Incrementar o índice apenas se a pessoa não for encontrada
         }
     }
-    if(!encontrado)
+    if (!encontrado)
     {
         cout << "Nenhuma pessoa encontrada com o CPF: " << CPF << endl;
     }
@@ -383,7 +381,6 @@ void apagaPessoas(Pessoa *pessoas[])
     int tam = Pessoa::TAM;
     for (int i = 0; i < tam; i++)
     {
-        cout << "Deletando pessoa " << pessoas[i]->getNome() << endl;
         delete pessoas[i];
     }
 }
@@ -391,14 +388,14 @@ void apagaPessoas(Pessoa *pessoas[])
 void encerraPrograma(Pessoa *pessoas[])
 {
     cout << "Obrigado por utilizar o programa" << endl;
-    // salvaDados(pessoas); // Salva os dados no arquivo
+    salvaDados(pessoas); // Salva os dados no arquivo
     apagaPessoas(pessoas);
 }
 
 int main()
 {
     Pessoa *pessoas[MAX];
-    // carregaDados(pessoas);
+    carregaDados(pessoas);
 
     int op = menu();
     while (op != 0)
