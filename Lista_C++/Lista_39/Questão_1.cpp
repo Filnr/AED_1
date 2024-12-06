@@ -41,7 +41,7 @@ public:
     void getDataNascimento(int &dia, int &mes, int &ano);
     void setCPF(const string &cpf);
     string getCPF();
-    void deletaPessoas()
+    void deletaPessoas() // Para deletar uma pessoa, sem mexer com o valor de tam
     {
         this->~Pessoa();
         TAM++;
@@ -211,57 +211,60 @@ void carregaDados(Pessoa *pessoas[])
     FILE *tam = fopen("qtRegistros.dat", "rb");
     if (tam == NULL)
     {
-        FILE *tam = fopen("qtRegistros.dat", "wb");
+        tam = fopen("qtRegistros.dat", "wb");
         fprintf(tam, "%d", 0);
         fclose(tam);
+        return; // Se não há registros, não há nada para carregar
     }
+    
     int qtRegistros;
     fscanf(tam, "%d", &qtRegistros);
     fclose(tam);
+
     Pessoa::TAM = qtRegistros;
+
     FILE *cadastros = fopen("cadastros.dat", "rb");
     if (cadastros != NULL)
     {
         for (int i = 0; i < qtRegistros; i++)
         {
-            string nome;
-            int dia, mes, ano;
-            string cpf;
-            fscanf(cadastros, "%s\n", &nome);
-            fscanf(cadastros, "%s\n", &cpf);
-            fscanf(cadastros, "%d\n", &dia);
-            fscanf(cadastros, "%d\n", &mes);
-            fscanf(cadastros, "%d\n", &ano);
-            pessoas[i] = new Pessoa(nome, cpf, dia, mes, ano);
+            pessoas[i] = new Pessoa(); // Aloca memória para cada pessoa
+            fread(pessoas[i], sizeof(Pessoa), 1, cadastros);
+        }
+        fclose(cadastros);
+    }
+    else
+    {
+        // Se o arquivo de cadastros não existe, inicializa o vetor de pessoas
+        for (int i = 0; i < Pessoa::TAM; i++)
+        {
+            pessoas[i] = nullptr;
         }
     }
-    fclose(cadastros);
 }
 
 void salvaDados(Pessoa *pessoas[])
 {
     FILE *tam = fopen("qtRegistros.dat", "wb");
-    if (tam != NULL)
+    if (tam == NULL)
     {
-        fprintf(tam, "%d", Pessoa::TAM);
-        cout << "Salvando " << Pessoa::TAM << " registros" << endl;
+        cout << "Erro ao abrir o arquivo para salvar a quantidade de registros." << endl;
+        return;
     }
-    else
-        cout << "Erro ao abrir qtRegistros.dat" << endl;
+    
+    fprintf(tam, "%d", Pessoa::TAM);
     fclose(tam);
 
     FILE *cadastros = fopen("cadastros.dat", "wb");
+    if (cadastros == NULL)
+    {
+        cout << "Erro ao abrir o arquivo para salvar os cadastros." << endl;
+        return;
+    }
+
     for (int i = 0; i < Pessoa::TAM; i++)
     {
-        string nome = pessoas[i]->getNome();
-        int dia, mes, ano;
-        string cpf = pessoas[i]->getCPF();
-        pessoas[i]->getDataNascimento(dia, mes, ano);
-        fprintf(cadastros, "%s\n", nome);
-        fprintf(cadastros, "%s\n", cpf);
-        fprintf(cadastros, "%d\n", dia);
-        fprintf(cadastros, "%d\n", mes);
-        fprintf(cadastros, "%d\n", ano);
+        fwrite(pessoas[i], sizeof(Pessoa), 1, cadastros);
     }
     fclose(cadastros);
 }
