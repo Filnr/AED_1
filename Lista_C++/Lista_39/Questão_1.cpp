@@ -1,5 +1,6 @@
 #include <iostream>
 #include <string>
+#include <cctype>
 using namespace std;
 
 #define MAX 100
@@ -25,11 +26,12 @@ class Pessoa
 {
 private:
     string nome;
+    string cpf;
     Data dataNascimento;
 
 public:
     static int TAM;
-    Pessoa() : nome(""), dataNascimento() { TAM++; };
+    Pessoa() : nome(""), dataNascimento(), cpf("") { TAM++; };
     Pessoa(string nome, int dia, int mes, int ano) : nome(nome), dataNascimento(dia, mes, ano) { TAM++; };
     Pessoa(string nome) : nome(nome), dataNascimento(0) { TAM++; };
     ~Pessoa() { TAM--; };
@@ -37,26 +39,87 @@ public:
     string getNome();
     void setDataNascimento(int dia, int mes, int ano);
     void getDataNascimento(int &dia, int &mes, int &ano);
+    void setCPF(const string &cpf);
+    string getCPF();
+    void deletaPessoas()
+    {
+        this->~Pessoa();
+        TAM++;
+    }
 };
 
 int Pessoa::TAM = 0;
 
+void Pessoa::setCPF(const string &cpf)
+{
+    this->cpf = cpf;
+}
+
+string Pessoa::getCPF()
+{
+    return this->cpf;
+}
+
+void leNome(string &nome, string mensagem, int caso)
+{
+    cout << "Digite o nome da " << mensagem << ": ";
+    switch (caso)
+    {
+    case 1: // Caso 1: Usuário digita o nome completo para registro
+        cin.ignore();
+        getline(cin, nome);
+        break;
+    case 2: // Caso 2: Usuário digita o primeiro nome para busca
+        cin >> nome;
+        break;
+    }
+}
 void setNomePessoa(Pessoa *pessoas[], int posicao)
 {
     string nome;
-    cout << "Digite o nome da pessoa: ";
-    cin.ignore();       // Ignora qualquer caractere pendente no buffer de entrada
-    getline(cin, nome); // Usa getline para ler o nome completo
+    leNome(nome, "pessoa", 1);
     pessoas[posicao]->setNome(nome);
+}
+
+void leData(int &dia, int &mes, int &ano)
+{
+    char delimiter;
+    bool erro;
+    do
+    {
+        cout << "Digite a data de nascimento (dia/mes/ano): ";
+        cin >> dia >> delimiter >> mes >> delimiter >> ano;
+        erro = (dia < 1 || dia > 31) || (mes < 1 || mes > 12) || ano < 1;
+        if (erro)
+            cout << "Data invalida, tente novamente" << endl;
+    } while (erro);
 }
 
 void setPessoaData(Pessoa *pessoas[], int posicao)
 {
     int dia, mes, ano;
-    char delimiter;
-    cout << "Digite a data de nascimento (dia/mes/ano): ";
-    cin >> dia >> delimiter >> mes >> delimiter >> ano;
+    leData(dia, mes, ano);
     pessoas[posicao]->setDataNascimento(dia, mes, ano);
+}
+
+void leCPF(string &cpf, string mensagem)
+{
+    bool erro;
+    do
+    {
+        cout << "Digite o CPF da " << mensagem << ": ";
+        cin >> cpf;
+        erro = (cpf.size() != 11);
+        if (erro)
+            cout << "CPF invalido, tente novamente" << endl;
+    } while (erro);
+}
+
+void setPessoaCPF(Pessoa *pessoas[], int posicao)
+{
+    string cpf;
+    leCPF(cpf, "pessoa");
+    pessoas[posicao]->setCPF(cpf);
 }
 
 void setPessoa(Pessoa *pessoas[], int posicao)
@@ -64,6 +127,7 @@ void setPessoa(Pessoa *pessoas[], int posicao)
     pessoas[posicao] = new Pessoa();
     setNomePessoa(pessoas, posicao);
     setPessoaData(pessoas, posicao);
+    setPessoaCPF(pessoas, posicao);
 }
 
 void Data::setData(int dia, int mes, int ano)
@@ -119,16 +183,26 @@ void Pessoa::getDataNascimento(int &dia, int &mes, int &ano)
     mes = this->dataNascimento.getMes();
     ano = this->dataNascimento.getAno();
 }
-
+// Fim das funções de classes
 int menu()
 {
     int op;
-    cout << "1 - Cadastrar pessoa" << endl;
-    cout << "2 - Listar pessoas" << endl;
-    cout << "3 - Apagar dados" << endl;
-    cout << "0 - Sair" << endl;
-    cout << "Digite a opcao desejada: ";
-    cin >> op;
+    bool invalido;
+    cout << "0 - Sair do programa" << endl;
+    cout << "1 - Cadastrar uma pessoa" << endl;
+    cout << "2 - Listar todas as pessoas" << endl;
+    cout << "3 - Pesquisar por nome" << endl;
+    cout << "4 - Pesquisar por CPF" << endl;
+    cout << "5 - Excluir Pessoa" << endl;
+    cout << "6 - Apagar todos os dados" << endl;
+    do
+    {
+        cout << "Digite a opcao desejada: ";
+        cin >> op;
+        invalido = (op < 0 || op > 6);
+        if (invalido)
+            cout << "Opcao invalida, tente novamente" << endl;
+    } while (invalido);
     return op;
 }
 
@@ -197,6 +271,7 @@ void salvaDados(Pessoa *pessoas[])
 
 void listaPessoa(Pessoa *pessoas[])
 {
+    cout << "TAM: " << Pessoa::TAM << endl;
     for (int i = 0; i < Pessoa::TAM; i++)
     {
         string nome = pessoas[i]->getNome();
@@ -210,21 +285,120 @@ void listaPessoa(Pessoa *pessoas[])
          << endl;
 }
 
-void encerraPrograma(Pessoa *pessoas[])
+bool comparaNomes(const string &nome, const string &nomeProcurado)
 {
-    cout << "Obrigado por utilizar o programa" << endl;
-    salvaDados(pessoas); // Salva os dados no arquivo
+    int i = 0;
+    bool iguais = true;
+    // Compara todas as letras das strings até encontrar um caractere nulo
+    while (iguais && nome[i] != '\0' && nomeProcurado[i] != '\0')
+    {
+        if (toupper(nome[i]) != toupper(nomeProcurado[i]))
+            iguais = false;
+        i++;
+    }
+    return iguais;
+}
+
+void procuraPessoa(Pessoa *pessoas[])
+{
+    string nomeProcurado;
+    leNome(nomeProcurado, "pessoa desejada", 2);
     for (int i = 0; i < Pessoa::TAM; i++)
+    {
+        if (comparaNomes(pessoas[i]->getNome(), nomeProcurado))
+        {
+            cout << "----------------------" << endl;
+            cout << "Nome: " << pessoas[i]->getNome() << endl;
+            int dia, mes, ano;
+            pessoas[i]->getDataNascimento(dia, mes, ano);
+            cout << "Data de nascimento: " << dia << "/" << mes << "/" << ano << endl;
+            cout << "----------------------" << endl;
+        }
+    }
+}
+
+void pesquisaCPF(Pessoa *pessoas[])
+{
+    bool encontrado = false;
+    string cpfProcurado;
+    leCPF(cpfProcurado, "pessoa desejada");
+    int i = 0;
+    while(i < Pessoa::TAM && !encontrado)
+    {
+        if(pessoas[i]->getCPF() == cpfProcurado)
+        {
+            cout << "----------------------" << endl;
+            cout << "Nome: " << pessoas[i]->getNome() << endl;
+            int dia, mes, ano;
+            pessoas[i]->getDataNascimento(dia, mes, ano);
+            cout << "Data de nascimento: " << dia << "/" << mes << "/" << ano << endl;
+            cout << "----------------------" << endl;
+            encontrado = true;
+        }
+        i++;
+    }
+    if(!encontrado)
+    {
+        cout << "Nenhuma pessoa encontrada com o CPF: " << cpfProcurado << endl;
+    }
+}
+
+void shiftPessoas(Pessoa *pessoas[], int posicao)
+{
+    for(int i = posicao; i < Pessoa::TAM - 1; i++)
+    {
+        pessoas[i] = pessoas[i + 1];
+    }
+    pessoas[Pessoa::TAM - 1] = nullptr; // Definir o último elemento como nullptr
+}
+
+void excluiPessoa(Pessoa *pessoas[])
+{
+    bool encontrado = false;
+    string CPF;
+    leCPF(CPF, "pessoa a ser excluida");
+    int i = 0, tam = Pessoa::TAM;
+    while(i < tam && !encontrado)
+    {
+        if(pessoas[i]->getCPF() == CPF){
+            cout << "Pessoa excluida: " << pessoas[i]->getNome() << endl;
+            pessoas[i]->deletaPessoas();
+            shiftPessoas(pessoas, i);
+            Pessoa::TAM--; // Atualizar o tamanho do vetor
+            encontrado = true;
+        }
+        else
+        {
+            i++; // Incrementar o índice apenas se a pessoa não for encontrada
+        }
+    }
+    if(!encontrado)
+    {
+        cout << "Nenhuma pessoa encontrada com o CPF: " << CPF << endl;
+    }
+}
+
+void apagaPessoas(Pessoa *pessoas[])
+{
+    int tam = Pessoa::TAM;
+    for (int i = 0; i < tam; i++)
     {
         cout << "Deletando pessoa " << pessoas[i]->getNome() << endl;
         delete pessoas[i];
     }
 }
 
+void encerraPrograma(Pessoa *pessoas[])
+{
+    cout << "Obrigado por utilizar o programa" << endl;
+    // salvaDados(pessoas); // Salva os dados no arquivo
+    apagaPessoas(pessoas);
+}
+
 int main()
 {
     Pessoa *pessoas[MAX];
-    carregaDados(pessoas);
+    // carregaDados(pessoas);
 
     int op = menu();
     while (op != 0)
@@ -233,16 +407,28 @@ int main()
         {
         case 1:
             setPessoa(pessoas, Pessoa::TAM);
+            cout << endl;
             break;
         case 2:
             listaPessoa(pessoas);
+            cout << endl;
             break;
         case 3:
-            cout << "Dados Apagados" << endl;
-            Pessoa::TAM = 0;
+            procuraPessoa(pessoas);
+            cout << endl;
             break;
-        default:
-            cout << "Opcao invalida" << endl;
+        case 4:
+            pesquisaCPF(pessoas);
+            cout << endl;
+            break;
+        case 5:
+            excluiPessoa(pessoas);
+            cout << endl;
+            break;
+        case 6:
+            cout << "Dados Apagados" << endl;
+            apagaPessoas(pessoas);
+            cout << endl;
             break;
         }
         op = menu(); // Atualiza a opção
