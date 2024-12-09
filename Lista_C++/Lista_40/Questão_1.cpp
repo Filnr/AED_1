@@ -575,6 +575,71 @@ int main()
     carregaDados(pessoas);
     int aniversarioMes;
     float op = menu();
+    while (op != 0)
+    {
+        switch (op)
+        {
+        case 1.1:
+            // cadastra professor
+            setProfessor(professores, Professor::TAM);
+            break;
+        case 1.2:
+            // cadastra aluno
+            setAluno(alunos, Aluno::TAM);
+            break;
+        case 2.1:
+            // lista professores
+            listaPessoa(professores);
+            break;
+        case 2.2:
+            // lista alunos
+            listaPessoa(alunos);
+            break;
+        case 3.1:
+            // procura professor por nome
+            procuraPessoa(professores);
+            break;
+        case 3.2:
+            // procura aluno por nome
+            procuraPessoa(alunos);
+            break;
+        case 4.1:
+            // pesquisa professor por cpf
+            pesquisaCPF(professores);
+            break;
+        case 4.2:
+            // pesquisa aluno por cpf
+            pesquisaCPF(alunos);
+            break;
+        case 5.1:
+            // exclui professor
+            excluiPessoa(professores);
+            break;
+        case 5.2:
+            // exclui aluno
+            excluiPessoa(alunos);
+            break;
+        case 6.1:
+            // apaga todos os professores
+            apagaPessoas(professores);
+            break;
+        case 6.2:
+            // apaga todos os alunos
+            apagaPessoas(alunos);
+            break;
+        case 7.1:
+            setAniversarioMes(aniversarioMes);
+            break;
+        case 7.2:
+            // lista os professos aniversariantes do mes
+            listaAniversariantesProfessores(professores, aniversarioMes);
+            break;
+        case 7.3:
+            // lista os alunos aniversariantes do mes
+            listaAniversariantesAlunos(alunos, aniversarioMes);
+        }
+        op = menu(); // Atualiza a opção
+    }
     encerraPrograma(pessoas);
     return 0;
 }
