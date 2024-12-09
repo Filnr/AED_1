@@ -2,7 +2,6 @@
 #include <string>
 #include <cctype>
 #include <fstream>
-#include <vector>
 
 using namespace std;
 
@@ -23,6 +22,9 @@ public:
     int getDia();
     int getMes();
     int getAno();
+    bool verificaMes(int mes){
+        return this->mes == mes;
+    }
 };
 
 class Pessoa
@@ -34,8 +36,8 @@ protected:
 
 public:
     static int TAM;
-    Pessoa() : nome(""), dataNascimento(), cpf("") {};
-    Pessoa(string nome, string cpf, int dia, int mes, int ano) : nome(nome), cpf(cpf), dataNascimento(dia, mes, ano) { TAM++; };
+    Pessoa() : nome(""), dataNascimento(), cpf("") { TAM++; };
+    Pessoa(string nome, string cpf, int dia, int mes, int ano) : nome(nome), cpf(cpf), dataNascimento(dia, mes, ano) {};
     Pessoa(string nome) : nome(nome), dataNascimento(0) { TAM++; };
     ~Pessoa() { TAM--; };
     void setNome(const string &nome);
@@ -58,15 +60,23 @@ private:
 
 public:
     static int TAM;
-    Aluno() : Pessoa(), matricula("") {};
-    Aluno(string nome, string cpf, int dia, int mes, int ano, string matricula) : Pessoa(nome, cpf, dia, mes, ano), matricula(matricula) {};
-    setAluno(const string &matricula)
+    Aluno() : Pessoa(), matricula("") { TAM++; };
+    Aluno(string nome, string cpf, int dia, int mes, int ano, string matricula) : Pessoa(nome, cpf, dia, mes, ano), matricula(matricula) { TAM++; };
+    ~Aluno() { TAM--; };
+    void setMatricula(const string &matricula)
     {
         this->matricula = matricula;
     }
-    string getAluno()
+    string getMatricula()
     {
         return this->matricula;
+    }
+    setAluno(const string &nome, const string &cpf, const string &matricula, int dia, int mes, int ano)
+    {
+        setNome(nome);
+        setCPF(cpf);
+        setDataNascimento(dia, mes, ano);
+        this->matricula = matricula;
     }
 };
 
@@ -79,6 +89,7 @@ public:
     static int TAM;
     Professor() : Pessoa(), titulo("") {};
     Professor(string nome, string cpf, int dia, int mes, int ano, string titulo) : Pessoa(nome, cpf, dia, mes, ano), titulo(titulo) {};
+    ~Professor() { TAM--; };
     setTitulo(const string &titulo)
     {
         this->titulo = titulo;
@@ -86,6 +97,13 @@ public:
     string getTitulo()
     {
         return this->titulo;
+    }
+    setProfessor(const string &nome, const string &cpf, const string &titulo, int dia, int mes, int ano)
+    {
+        setNome(nome);
+        setCPF(cpf);
+        setDataNascimento(dia, mes, ano);
+        this->titulo = titulo;
     }
 };
 
@@ -233,7 +251,7 @@ int leOpcao(int caso)
     {
         cout << "Digite a opcao desejada: ";
         cin >> op;
-        switch (caso)
+        switch (caso)//caso 1: menu principal, caso 2: menu secundário
         {
         case 1:
             invalido = (op < 0 || op > 7);
@@ -241,8 +259,6 @@ int leOpcao(int caso)
         case 2:
             invalido = (op < 0 || op > 2);
             break;
-        case 3:
-            invalido = (op < 0 || op > 3);
         }
         if (invalido)
             cout << "Opcao invalida, tente novamente" << endl;
@@ -255,42 +271,43 @@ float menuSecundario(int op)
     int escolha;
     switch (op)
     {
-    case 1:
+    case 1://menu de cadastro
         cout << "0 - Voltar ao menu anterior" << endl;
         cout << "1 - Cadastrar Professor " << endl;
         cout << "2 - Cadastrar Aluno" << endl;
         escolha = leOpcao(2);
         break;
-    case 2:
+    case 2://menu de listagem
         cout << "0 - Voltar ao menu anterior" << endl;
         cout << "1 - Listar Professores" << endl;
         cout << "2 - Listar Alunos" << endl;
         escolha = leOpcao(2);
         break;
-    case 3:
+    case 3://menu de pesquisa
         cout << "0 - Voltar ao menu anterior" << endl;
         cout << "1 - Pesquisar Professor por nome" << endl;
         cout << "2 - Pesquisar Aluno por nome" << endl;
         escolha = leOpcao(2);
-    case 4:
+        break;
+    case 4://menu de pesquisa
         cout << "0 - Voltar ao menu anterior" << endl;
         cout << "1 - Pesquisar Professor por CPF" << endl;
         cout << "2 - Pesquisar Aluno por CPF" << endl;
         escolha = leOpcao(2);
         break;
-    case 5:
+    case 5://menu de exclusão
         cout << "0 - Voltar ao menu anterior" << endl;
         cout << "1 - Excluir Professor(pelo CPF)" << endl;
         cout << "2 - Excluir Aluno(pelo CPF)" << endl;
         escolha = leOpcao(2);
         break;
-    case 6:
+    case 6://menu de exclusão total
         cout << "0 - Voltar ao menu anterior" << endl;
         cout << "1 - Apagar todos os Professores" << endl;
         cout << "2 - Apagar todos os Alunos" << endl;
         escolha = leOpcao(2);
         break;
-    case 7:
+    case 7://menu de aniversariantes
         cout << "0 - Voltar ao menu anterior" << endl;
         cout << "1 - Listar os professores aniversariantes do mes" << endl;
         cout << "2 - Listar os alunos aniversariantes do mes" << endl;
@@ -302,7 +319,7 @@ float menuSecundario(int op)
 
 float menu()
 {
-    int op;
+    float op;
     bool invalido;
     cout << "0 - Sair do programa" << endl;
     cout << "1 - Cadastrar uma pessoa" << endl;
@@ -313,7 +330,7 @@ float menu()
     cout << "6 - Apagar todos os dados" << endl;
     cout << "7 - Aniversariantes do mes" << endl;
     op = leOpcao(1);
-    //menuSecundario(op);
+    //op = menuSecundario(op);
     return op;
 }
 
@@ -435,8 +452,60 @@ void apagaPessoas(Pessoa *pessoas[])
     }
 }
 
+void carregaDados(Pessoa *pessoas[])
+{
+    ifstream arq("qtRegistros.dat");
+    if (arq.is_open())
+    {
+        arq >> Pessoa::TAM;
+        arq.close();
+    }
+    else
+    {
+        Pessoa::TAM = 0;
+    }
+    
+    ifstream cadastros("cadastros.dat", ios::binary);
+    if(cadastros.is_open())
+    {
+        for (int i = 0; i < Pessoa::TAM; i++)
+        {
+            string nome, cpf;
+            int dia, mes, ano;
+            cadastros >> nome;
+            cadastros >> cpf;
+            cadastros >> dia >> mes >> ano;
+            pessoas[i] = new Pessoa(nome, cpf, dia, mes, ano);
+        }
+        cadastros.close();
+    }
+    else
+    {
+        cout << "Nenhum cadastro encontrado" << endl;
+    }
+}
+
+void salvaDados(Pessoa *pessoas[])
+{
+    ofstream arq("qtRegistros.dat");
+    arq << Pessoa::TAM;
+    arq.close();
+
+    ofstream cadastros("cadastros.dat", ios::binary);
+    for (int i = 0; i < Pessoa::TAM; i++)
+    {
+        cadastros << pessoas[i]->getNome() << endl;
+        cadastros << pessoas[i]->getCPF() << endl;
+        int dia, mes, ano;
+        pessoas[i]->getDataNascimento(dia, mes, ano);
+        cadastros << dia << " " << mes << " " << ano << endl;
+    }
+    cadastros.close();
+}
+
 void encerraPrograma(Pessoa *pessoas[])
 {
+    salvaDados(pessoas);
     cout << "Obrigado por utilizar o programa" << endl;
     apagaPessoas(pessoas);
 }
@@ -444,7 +513,7 @@ void encerraPrograma(Pessoa *pessoas[])
 int main()
 {
     Pessoa *pessoas[MAX];
-
+    carregaDados(pessoas);
     int op = menu();
     while (op != 0)
     {
