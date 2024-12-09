@@ -22,7 +22,8 @@ public:
     int getDia();
     int getMes();
     int getAno();
-    bool verificaMes(int mes){
+    bool verificaMes(int mes)
+    {
         return this->mes == mes;
     }
 };
@@ -189,6 +190,47 @@ void setPessoa(Pessoa *pessoas[], int posicao)
     setPessoaCPF(pessoas, posicao);
 }
 
+void setAlunoMatricula(Aluno *pessoas[], int posicao)
+{
+    string matricula;
+    cout << "Digite a matricula do aluno: ";
+    cin >> matricula;
+    pessoas[posicao]->setMatricula(matricula);
+}
+
+void setAluno(Aluno *pessoas[], int posicao)
+{
+    pessoas[posicao] = new Aluno();
+    setNomePessoa(pessoas, posicao);
+    setPessoaData(pessoas, posicao);
+    setPessoaCPF(pessoas, posicao);
+    setAlunoMatricula(pessoas, posicao);
+}
+
+void setProfessorTitulo(Professor *pessoas[], int posicao)
+{
+    string titulo;
+    bool erro;
+    do
+    {
+        cout << "Digite o titulo do professor[Especialista, Mestre ou Doutor]: ";
+        cin >> titulo;
+        erro = titulo != "Especialista" && titulo != "Mestre" && titulo != "Doutor";
+        if (erro)
+            cout << "Titulo invalido, tente novamente" << endl;
+    } while (erro);
+    pessoas[posicao]->setTitulo(titulo);
+}
+
+void setProfessor(Professor *pessoas[], int posicao)
+{
+    pessoas[posicao] = new Professor();
+    setNomePessoa(pessoas, posicao);
+    setPessoaData(pessoas, posicao);
+    setPessoaCPF(pessoas, posicao);
+    setProfessorTitulo(pessoas, posicao);
+}
+
 void Data::setData(int dia, int mes, int ano)
 {
     if ((dia > 0 && dia <= 31) && (mes > 0 && mes < 13) && ano > 0)
@@ -251,14 +293,16 @@ int leOpcao(int caso)
     {
         cout << "Digite a opcao desejada: ";
         cin >> op;
-        switch (caso)//caso 1: menu principal, caso 2: menu secundário
+        switch (caso) // caso 1: menu principal, caso 2: menu secundário
         {
         case 1:
             invalido = (op < 0 || op > 7);
             break;
         case 2:
-            invalido = (op < 0 || op > 2);
+            invalido = (op < 0 || op > 3);
             break;
+        case 3:
+            invalido = (op < 0 || op > 4);
         }
         if (invalido)
             cout << "Opcao invalida, tente novamente" << endl;
@@ -266,53 +310,58 @@ int leOpcao(int caso)
     return op;
 }
 
-float menuSecundario(int op)
+float menuSecundario(int op, bool &voltaMenu)
 {
     int escolha;
     switch (op)
     {
-    case 1://menu de cadastro
+    case 1: // menu de cadastro
         cout << "0 - Voltar ao menu anterior" << endl;
         cout << "1 - Cadastrar Professor " << endl;
         cout << "2 - Cadastrar Aluno" << endl;
         escolha = leOpcao(2);
         break;
-    case 2://menu de listagem
+    case 2: // menu de listagem
         cout << "0 - Voltar ao menu anterior" << endl;
         cout << "1 - Listar Professores" << endl;
         cout << "2 - Listar Alunos" << endl;
         escolha = leOpcao(2);
         break;
-    case 3://menu de pesquisa
+    case 3: // menu de pesquisa
         cout << "0 - Voltar ao menu anterior" << endl;
         cout << "1 - Pesquisar Professor por nome" << endl;
         cout << "2 - Pesquisar Aluno por nome" << endl;
         escolha = leOpcao(2);
         break;
-    case 4://menu de pesquisa
+    case 4: // menu de pesquisa
         cout << "0 - Voltar ao menu anterior" << endl;
         cout << "1 - Pesquisar Professor por CPF" << endl;
         cout << "2 - Pesquisar Aluno por CPF" << endl;
         escolha = leOpcao(2);
         break;
-    case 5://menu de exclusão
+    case 5: // menu de exclusão
         cout << "0 - Voltar ao menu anterior" << endl;
         cout << "1 - Excluir Professor(pelo CPF)" << endl;
         cout << "2 - Excluir Aluno(pelo CPF)" << endl;
         escolha = leOpcao(2);
         break;
-    case 6://menu de exclusão total
+    case 6: // menu de exclusão total
         cout << "0 - Voltar ao menu anterior" << endl;
         cout << "1 - Apagar todos os Professores" << endl;
         cout << "2 - Apagar todos os Alunos" << endl;
         escolha = leOpcao(2);
         break;
-    case 7://menu de aniversariantes
+    case 7: // menu de aniversariantes
         cout << "0 - Voltar ao menu anterior" << endl;
-        cout << "1 - Listar os professores aniversariantes do mes" << endl;
-        cout << "2 - Listar os alunos aniversariantes do mes" << endl;
-        escolha = leOpcao(2);
+        cout << "1 - Informar mes a ser pesquisado" << endl;
+        cout << "2 - Listar os professores aniversariantes do mes" << endl;
+        cout << "3 - Listar os alunos aniversariantes do mes" << endl;
+        escolha = leOpcao(3);
         break;
+    }
+    if (escolha == 0)
+    {
+        voltaMenu = true;
     }
     return op + (escolha / 10);
 }
@@ -320,17 +369,25 @@ float menuSecundario(int op)
 float menu()
 {
     float op;
-    bool invalido;
-    cout << "0 - Sair do programa" << endl;
-    cout << "1 - Cadastrar uma pessoa" << endl;
-    cout << "2 - Listar todas as pessoas" << endl;
-    cout << "3 - Pesquisar por nome" << endl;
-    cout << "4 - Pesquisar por CPF" << endl;
-    cout << "5 - Excluir Pessoa" << endl;
-    cout << "6 - Apagar todos os dados" << endl;
-    cout << "7 - Aniversariantes do mes" << endl;
-    op = leOpcao(1);
-    //op = menuSecundario(op);
+    bool retornaMenu = false;
+    do
+    {
+        cout << "0 - Sair do programa" << endl;
+        cout << "1 - Cadastrar uma pessoa" << endl;
+        cout << "2 - Listar todas as pessoas" << endl;
+        cout << "3 - Pesquisar por nome" << endl;
+        cout << "4 - Pesquisar por CPF" << endl;
+        cout << "5 - Excluir Pessoa" << endl;
+        cout << "6 - Apagar todos os dados" << endl;
+        cout << "7 - Aniversariantes do mes" << endl;
+        op = leOpcao(1);
+        if (op != 0)
+        {
+            op = menuSecundario(op, retornaMenu);
+        }
+    } while (retornaMenu);
+
+    cout << "teste: " << op << endl;
     return op;
 }
 
@@ -464,9 +521,9 @@ void carregaDados(Pessoa *pessoas[])
     {
         Pessoa::TAM = 0;
     }
-    
+
     ifstream cadastros("cadastros.dat", ios::binary);
-    if(cadastros.is_open())
+    if (cadastros.is_open())
     {
         for (int i = 0; i < Pessoa::TAM; i++)
         {
@@ -513,40 +570,11 @@ void encerraPrograma(Pessoa *pessoas[])
 int main()
 {
     Pessoa *pessoas[MAX];
+    Professor *professores[MAX];
+    Aluno *alunos[MAX];
     carregaDados(pessoas);
-    int op = menu();
-    while (op != 0)
-    {
-        switch (op)
-        {
-        case 1:
-            setPessoa(pessoas, Pessoa::TAM);
-            cout << endl;
-            break;
-        case 2:
-            listaPessoa(pessoas);
-            cout << endl;
-            break;
-        case 3:
-            procuraPessoa(pessoas);
-            cout << endl;
-            break;
-        case 4:
-            pesquisaCPF(pessoas);
-            cout << endl;
-            break;
-        case 5:
-            excluiPessoa(pessoas);
-            cout << endl;
-            break;
-        case 6:
-            cout << "Dados Apagados" << endl;
-            apagaPessoas(pessoas);
-            cout << endl;
-            break;
-        }
-        op = menu(); // Atualiza a opção
-    }
+    int aniversarioMes;
+    float op = menu();
     encerraPrograma(pessoas);
     return 0;
 }
