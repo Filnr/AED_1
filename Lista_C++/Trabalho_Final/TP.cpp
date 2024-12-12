@@ -459,6 +459,7 @@ void procuraPessoa(Pessoa *pessoas[], int escolha)
 {
     bool encontrado = false;
     string nomeProcurado;
+    // Seleciona o texto a depender da escolha, 1 para aluno, 2 para professor
     if (escolha == 1)
     {
         setNomePessoa(nomeProcurado, "do aluno");
@@ -469,6 +470,7 @@ void procuraPessoa(Pessoa *pessoas[], int escolha)
     }
     for (int i = 0; i < Pessoa::TAM; i++)
     {
+        //Varre o array procurando pessoas com o nome procurado
         if (pessoas[i] != nullptr)
         {
             if (typeid(*pessoas[i]) == typeid(Aluno) && escolha == 1)
@@ -574,8 +576,10 @@ void excluiPessoa(Pessoa *pessoas[], int escolha)
     int i = 0, tam = Pessoa::TAM;
     while (i < tam && !encontrado)
     {
+        // Itera sobre o vetor de pessoas até encontrar a pessoa com o CPF procurado
         if (pessoas[i] != nullptr)
         {
+            //Exclui a pessoa e chama a função shiftPessoas para tapar o buraco
             if (typeid(*pessoas[i]) == typeid(Aluno) && escolha == 1)
             {
                 if (pessoas[i]->getCPF() == CPF)
@@ -662,6 +666,7 @@ void apagaPessoas(Pessoa *pessoas[], int escolha)
 
 void setAniversarioMes(int &aniversarioMes)
 {
+    // Função que solicita o mês a ser pesquisado
     bool erro;
     do
     {
@@ -675,6 +680,7 @@ void setAniversarioMes(int &aniversarioMes)
 
 void listaAniversarios(Pessoa *pessoas[], int aniversarioMes)
 {
+    //Função que lista os aniversariantes do mês
     bool encontrado = false;
     if (aniversarioMes > 0 && aniversarioMes < 13)
     {
@@ -703,6 +709,7 @@ void listaAniversarios(Pessoa *pessoas[], int aniversarioMes)
 
 void carregaDados(Pessoa *pessoas[])
 {
+    //Carrega o TAM dos arquivos
     ifstream arq("qtRegistros.dat");
     if (arq.is_open())
     {
@@ -713,7 +720,7 @@ void carregaDados(Pessoa *pessoas[])
     {
         Pessoa::TAM = 0;
     }
-
+    //Carrega as pessoas do arquivo 
     ifstream cadastros("cadastros.dat", ios::binary);
     if (cadastros.is_open())
     {
@@ -752,6 +759,7 @@ void carregaDados(Pessoa *pessoas[])
 
 void salvaDados(Pessoa *pessoas[])
 {
+    //salva o TAM no arquivo qtRegistros.dat
     ofstream arq("qtRegistros.dat");
     if (!arq.is_open())
         throw std::runtime_error("Não foi possível abrir o arquivo qtRegistros.dat");
@@ -759,6 +767,7 @@ void salvaDados(Pessoa *pessoas[])
     arq << Pessoa::TAM;
     arq.close();
 
+    //salva os dados das pessoas no arquivo cadastros.dat
     ofstream cadastros("cadastros.dat", ios::binary);
     if (!cadastros.is_open())
         throw std::runtime_error("Não foi possível abrir o arquivo cadastros.dat");
@@ -786,6 +795,7 @@ void salvaDados(Pessoa *pessoas[])
 
 void encerraPrograma(Pessoa *pessoas[])
 {
+    //Função responsavel por encerrar o programa corretamente
     salvaDados(pessoas);
     cout << "Obrigado por utilizar o programa" << endl;
     apagaPessoas(pessoas, 3);
@@ -810,11 +820,21 @@ int main()
             break;
         case 21:
             // lista professores
-            listaPessoa(pessoas, 2);
+            try:
+                listaPessoa(pessoas, 2);
+            catch (const std::exception &e)
+            {
+                cout << "Erro ao listar professores: " << e.what() << endl;
+            }
             break;
         case 22:
             // lista alunos
-            listaPessoa(pessoas, 1);
+            try:
+                listaPessoa(pessoas, 1);
+            catch (const std::exception &e)
+            {
+                cout << "Erro ao listar alunos: " << e.what() << endl;
+            }
             break;
         case 31:
             // procura professor por nome
