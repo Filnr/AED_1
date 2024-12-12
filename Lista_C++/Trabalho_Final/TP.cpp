@@ -60,12 +60,7 @@ private:
 
 public:
     Aluno() : Pessoa(), matricula("") { TAM++; };
-    Aluno(string nome, string cpf, int dia, int mes, int ano, string matricula)
-    try : Pessoa(nome, cpf, dia, mes, ano), matricula(matricula)
-    {
-        if (!this)
-            throw std::bad_alloc();
-    }
+    Aluno(string nome, string cpf, int dia, int mes, int ano, string matricula) : Pessoa(nome, cpf, dia, mes, ano), matricula(matricula) {};
     void setMatricula(const string &matricula)
     {
         this->matricula = matricula;
@@ -101,12 +96,7 @@ private:
 
 public:
     Professor() : Pessoa(), titulo("") {};
-    Professor(string nome, string cpf, int dia, int mes, int ano, string titulo)
-    try : Pessoa(nome, cpf, dia, mes, ano), titulo(titulo)
-    {
-        if (!this)
-            throw std::bad_alloc();
-    }
+    Professor(string nome, string cpf, int dia, int mes, int ano, string titulo) : Pessoa(nome, cpf, dia, mes, ano), titulo(titulo) {};
     void setTitulo(const string &titulo)
     {
         this->titulo = titulo;
@@ -319,6 +309,7 @@ int leOpcao(int caso)
     do
     {
         cout << "Digite a opcao desejada: ";
+        cin.ignore();
         cin >> op;
         switch (caso) // caso 1: menu principal, caso 2: menu secundário
         {
