@@ -60,7 +60,12 @@ private:
 
 public:
     Aluno() : Pessoa(), matricula("") { TAM++; };
-    Aluno(string nome, string cpf, int dia, int mes, int ano, string matricula) : Pessoa(nome, cpf, dia, mes, ano), matricula(matricula) {};
+    Aluno(string nome, string cpf, int dia, int mes, int ano, string matricula)
+    try : Pessoa(nome, cpf, dia, mes, ano), matricula(matricula)
+    {
+        if (!this)
+            throw std::bad_alloc();
+    }
     void setMatricula(const string &matricula)
     {
         this->matricula = matricula;
@@ -96,8 +101,12 @@ private:
 
 public:
     Professor() : Pessoa(), titulo("") {};
-    Professor(string nome, string cpf, int dia, int mes, int ano, string titulo) : Pessoa(nome, cpf, dia, mes, ano), titulo(titulo) {};
-    ~Professor() { TAM--; };
+    Professor(string nome, string cpf, int dia, int mes, int ano, string titulo)
+    try : Pessoa(nome, cpf, dia, mes, ano), titulo(titulo)
+    {
+        if (!this)
+            throw std::bad_alloc();
+    }
     void setTitulo(const string &titulo)
     {
         this->titulo = titulo;
@@ -130,7 +139,7 @@ public:
     int getTipo() override
     {
         return 2;
-    } 
+    }
 };
 
 int Pessoa::TAM = 0;
@@ -167,8 +176,8 @@ void leData(int &dia, int &mes, int &ano)
         erro = (dia < 1 || dia > 31) || (mes < 1 || mes > 12) || ano < 1;
         if (erro)
             cout << "Data invalida, tente novamente" << endl;
-            cin.clear();
-            cin.ignore();
+        cin.clear();
+        cin.ignore();
     } while (erro);
 }
 
@@ -240,7 +249,18 @@ void setPessoa(Pessoa *pessoas[], int posicao, int escolha)
 
 void Data::setData(int dia, int mes, int ano)
 {
-    if ((dia > 0 && dia <= 31) && (mes > 0 && mes < 13) && ano > 0)
+    // Array de dias por mês (ano não bissexto)
+    int diasNoMes[12] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+
+    // Verifica ano bissexto
+    if (ano % 4 == 0 && (ano % 100 != 0 || ano % 400 == 0))
+    {
+        diasNoMes[1] = 29;
+    }
+
+    // Validação da data
+    if (ano > 0 && mes > 0 && mes <= 12 &&
+        dia > 0 && dia <= diasNoMes[mes - 1])
     {
         this->dia = dia;
         this->mes = mes;
@@ -307,9 +327,6 @@ int leOpcao(int caso)
             break;
         case 2:
             invalido = (op < 0 || op > 3);
-            break;
-        case 3:
-            invalido = (op < 0 || op > 4);
         }
         if (invalido)
             cout << "Opcao invalida, tente novamente" << endl;
@@ -362,16 +379,15 @@ int menuSecundario(int op, bool &voltaMenu)
     case 7: // menu de aniversariantes
         cout << "0 - Voltar ao menu anterior" << endl;
         cout << "1 - Informar mes a ser pesquisado" << endl;
-        cout << "2 - Listar os professores aniversariantes do mes" << endl;
-        cout << "3 - Listar os alunos aniversariantes do mes" << endl;
-        subOp = leOpcao(3);
+        cout << "2 - Listar Aniversariantes do mes" << endl;
+        subOp = leOpcao(2);
         break;
     }
     if (subOp == 0)
     {
         voltaMenu = true;
     }
-    return op * 10 + subOp; //soma os valores para formar a opção
+    return op * 10 + subOp; // soma os valores para formar a opção
 }
 
 int menu()
@@ -380,7 +396,9 @@ int menu()
     bool retornaMenu = false;
     do
     {
-        cout << "0 - Sair do programa" << endl;
+
+        cout << endl
+             << "0 - Sair do programa" << endl;
         cout << "1 - Cadastrar uma pessoa" << endl;
         cout << "2 - Listar todas as pessoas" << endl;
         cout << "3 - Pesquisar por nome" << endl;
@@ -405,15 +423,18 @@ void listaPessoa(Pessoa *pessoas[], int escolha)
     // 1 lista alunos, 2 lista professores
     for (int i = 0; i < Pessoa::TAM; i++)
     {
-        if (typeid(*pessoas[i]) == typeid(Aluno) && escolha == 1)
+        if (pessoas[i] != nullptr)
         {
-            pessoas[i]->escreve();
-            encontrado = true;
-        }
-        else if (typeid(*pessoas[i]) == typeid(Professor) && escolha == 2)
-        {
-            pessoas[i]->escreve();
-            encontrado = true;
+            if (typeid(*pessoas[i]) == typeid(Aluno) && escolha == 1)
+            {
+                pessoas[i]->escreve();
+                encontrado = true;
+            }
+            else if (typeid(*pessoas[i]) == typeid(Professor) && escolha == 2)
+            {
+                pessoas[i]->escreve();
+                encontrado = true;
+            }
         }
     }
     if (!encontrado)
@@ -457,28 +478,31 @@ void procuraPessoa(Pessoa *pessoas[], int escolha)
     }
     for (int i = 0; i < Pessoa::TAM; i++)
     {
-        if (typeid(*pessoas[i]) == typeid(Aluno) && escolha == 1)
+        if (pessoas[i] != nullptr)
         {
-            if (comparaNomes(pessoas[i]->getNome(), nomeProcurado))
+            if (typeid(*pessoas[i]) == typeid(Aluno) && escolha == 1)
             {
-                pessoas[i]->escreve();
-                encontrado = true;
+                if (comparaNomes(pessoas[i]->getNome(), nomeProcurado))
+                {
+                    pessoas[i]->escreve();
+                    encontrado = true;
+                }
             }
-        }
-        else if (typeid(*pessoas[i]) == typeid(Professor) && escolha == 2)
-        {
-            if (comparaNomes(pessoas[i]->getNome(), nomeProcurado))
+            else if (typeid(*pessoas[i]) == typeid(Professor) && escolha == 2)
             {
-                pessoas[i]->escreve();
-                encontrado = true;
+                if (comparaNomes(pessoas[i]->getNome(), nomeProcurado))
+                {
+                    pessoas[i]->escreve();
+                    encontrado = true;
+                }
             }
         }
     }
-    if(!encontrado && escolha == 1)
+    if (!encontrado && escolha == 1)
     {
         cout << "Nenhum aluno encontrado com o nome: " << nomeProcurado << endl;
     }
-    else if(!encontrado && escolha == 2)
+    else if (!encontrado && escolha == 2)
     {
         cout << "Nenhum professor encontrado com o nome: " << nomeProcurado << endl;
     }
@@ -502,29 +526,32 @@ void pesquisaCPF(Pessoa *pessoas[], int escolha)
     // Itera sobre o vetor de pessoas até encontrar a pessoa com o CPF procurado
     while (i < Pessoa::TAM && !encontrado)
     {
-        if (typeid(*pessoas[i]) == typeid(Aluno) && escolha == 1)
+        if (pessoas[i] != nullptr)
         {
-            if (pessoas[i]->getCPF() == cpfProcurado)
+            if (typeid(*pessoas[i]) == typeid(Aluno) && escolha == 1)
             {
-                pessoas[i]->escreve();
-                encontrado = true;
+                if (pessoas[i]->getCPF() == cpfProcurado)
+                {
+                    pessoas[i]->escreve();
+                    encontrado = true;
+                }
             }
-        }
-        else if (typeid(*pessoas[i]) == typeid(Professor) && escolha == 2)
-        {
-            if (pessoas[i]->getCPF() == cpfProcurado)
+            else if (typeid(*pessoas[i]) == typeid(Professor) && escolha == 2)
             {
-                pessoas[i]->escreve();
-                encontrado = true;
+                if (pessoas[i]->getCPF() == cpfProcurado)
+                {
+                    pessoas[i]->escreve();
+                    encontrado = true;
+                }
             }
+            i++;
         }
-        i++;
     }
-    if(!encontrado && escolha == 1)
+    if (!encontrado && escolha == 1)
     {
         cout << "Nenhum aluno encontrado com o CPF: " << cpfProcurado << endl;
     }
-    else if(!encontrado && escolha == 2)
+    else if (!encontrado && escolha == 2)
     {
         cout << "Nenhum professor encontrado com o CPF: " << cpfProcurado << endl;
     }
@@ -556,35 +583,38 @@ void excluiPessoa(Pessoa *pessoas[], int escolha)
     int i = 0, tam = Pessoa::TAM;
     while (i < tam && !encontrado)
     {
-        if (typeid(*pessoas[i]) == typeid(Aluno) && escolha == 1)
+        if (pessoas[i] != nullptr)
         {
-            if (pessoas[i]->getCPF() == CPF)
+            if (typeid(*pessoas[i]) == typeid(Aluno) && escolha == 1)
             {
-                cout << "Aluno excluido: " << pessoas[i]->getNome() << endl;
-                delete pessoas[i];
-                Pessoa::TAM--;
-                shiftPessoas(pessoas, i);
-                encontrado = true;
+                if (pessoas[i]->getCPF() == CPF)
+                {
+                    cout << "Aluno excluido: " << pessoas[i]->getNome() << endl;
+                    delete pessoas[i];
+                    Pessoa::TAM--;
+                    shiftPessoas(pessoas, i);
+                    encontrado = true;
+                }
             }
-        }
-        else if (typeid(*pessoas[i]) == typeid(Professor) && escolha == 2)
-        {
-            if (pessoas[i]->getCPF() == CPF)
+            else if (typeid(*pessoas[i]) == typeid(Professor) && escolha == 2)
             {
-                cout << "Professor excluido: " << pessoas[i]->getNome() << endl;
-                delete pessoas[i];
-                Pessoa::TAM--;
-                shiftPessoas(pessoas, i);
-                encontrado = true;
+                if (pessoas[i]->getCPF() == CPF)
+                {
+                    cout << "Professor excluido: " << pessoas[i]->getNome() << endl;
+                    delete pessoas[i];
+                    Pessoa::TAM--;
+                    shiftPessoas(pessoas, i);
+                    encontrado = true;
+                }
             }
+            i++;
         }
-        i++;
     }
-    if(!encontrado && escolha == 1)
+    if (!encontrado && escolha == 1)
     {
         cout << "Nenhum aluno encontrado com o CPF: " << CPF << endl;
     }
-    else if(!encontrado && escolha == 2)
+    else if (!encontrado && escolha == 2)
     {
         cout << "Nenhum professor encontrado com o CPF: " << CPF << endl;
     }
@@ -595,13 +625,12 @@ void apagaPessoas(Pessoa *pessoas[], int escolha)
     int i = 0;
     switch (escolha)
     {
-    case 1:
+    case 1: // Apaga todos os alunos
         while (i < Pessoa::TAM)
         {
             if (typeid(*pessoas[i]) == typeid(Aluno))
             {
                 delete pessoas[i];
-                Pessoa::TAM--;
                 shiftPessoas(pessoas, i);
             }
             else
@@ -611,13 +640,13 @@ void apagaPessoas(Pessoa *pessoas[], int escolha)
         }
         cout << "Todos os alunos foram excluidos" << endl;
         break;
-    case 2:
+
+    case 2: // Apaga todos os professores
         while (i < Pessoa::TAM)
         {
             if (typeid(*pessoas[i]) == typeid(Professor))
             {
                 delete pessoas[i];
-                Pessoa::TAM--;
                 shiftPessoas(pessoas, i);
             }
             else
@@ -627,12 +656,16 @@ void apagaPessoas(Pessoa *pessoas[], int escolha)
         }
         cout << "Todos os professores foram excluidos" << endl;
         break;
-    case 3:
-        for(int i = 0; i < Pessoa::TAM; i++)
+
+    case 3: // Apaga todos os registros
+        for (int i = 0; i < Pessoa::TAM; i++)
         {
             delete pessoas[i];
+            pessoas[i] = nullptr;
         }
         Pessoa::TAM = 0;
+        cout << "Todos os registros foram excluidos" << endl;
+        break;
     }
 }
 
@@ -649,46 +682,32 @@ void setAniversarioMes(int &aniversarioMes)
     } while (erro);
 }
 
-void listaAniversarios(Pessoa *pessoas[], int escolha, int aniversarioMes)
+void listaAniversarios(Pessoa *pessoas[], int aniversarioMes)
 {
     bool encontrado = false;
-    if (escolha == 1)
+    if (aniversarioMes > 0 && aniversarioMes < 13)
     {
-        cout << "Alunos aniversariantes do mes " << aniversarioMes << endl;
+        cout << "Aniversariantes do mes " << aniversarioMes << endl;
+        for (int i = 0; i < Pessoa::TAM; i++)
+        {
+            if (pessoas[i] != nullptr)
+            {
+                int dia, mes, ano;
+                pessoas[i]->getDataNascimento(dia, mes, ano);
+                if (mes == aniversarioMes)
+                {
+                    pessoas[i]->escreve();
+                    encontrado = true;
+                }
+            }
+        }
+        if (!encontrado)
+        {
+            cout << "Nenhum aniversariante encontrado no mes " << aniversarioMes << endl;
+        }
     }
     else
-    {
-        cout << "Professores aniversariantes do mes " << aniversarioMes << endl;
-    }
-    for (int i = 0; i < Pessoa::TAM; i++)
-    {
-        int dia, mes, ano;
-        pessoas[i]->getDataNascimento(dia, mes, ano);
-        if (mes == aniversarioMes)
-        {
-            if (typeid(*pessoas[i]) == typeid(Aluno) && escolha == 1)
-            {
-                pessoas[i]->escreve();
-                encontrado = true;
-            }
-            else if (typeid(*pessoas[i]) == typeid(Professor) && escolha == 2)
-            {
-                pessoas[i]->escreve();
-                encontrado = true;
-            }
-        }
-    }
-    if (!encontrado)
-    {
-        if (escolha == 1)
-        {
-            cout << "Nenhum aluno aniversariante encontrado no mes " << aniversarioMes << endl;
-        }
-        else
-        {
-            cout << "Nenhum professor aniversariante encontrado no mes " << aniversarioMes << endl;
-        }
-    }
+        cout << "Digite um mes antes de prosseguir" << endl;
 }
 
 void carregaDados(Pessoa *pessoas[])
@@ -743,12 +762,20 @@ void carregaDados(Pessoa *pessoas[])
 void salvaDados(Pessoa *pessoas[])
 {
     ofstream arq("qtRegistros.dat");
+    if (!arq.is_open())
+        throw std::runtime_error("Não foi possível abrir o arquivo qtRegistros.dat");
+
     arq << Pessoa::TAM;
     arq.close();
 
     ofstream cadastros("cadastros.dat", ios::binary);
-    for (int i = 0; i < Pessoa::TAM; i++)
+    if (!cadastros.is_open())
+        throw std::runtime_error("Não foi possível abrir o arquivo cadastros.dat");
+
+    try
     {
+        for (int i = 0; i < Pessoa::TAM; i++)
+        {
             cadastros << pessoas[i]->getTipo() << endl;
             cadastros << pessoas[i]->getNome() << endl;
             cadastros << pessoas[i]->getCPF() << endl;
@@ -756,7 +783,13 @@ void salvaDados(Pessoa *pessoas[])
             pessoas[i]->getDataNascimento(dia, mes, ano);
             cadastros << dia << " " << mes << " " << ano << endl;
             cadastros << pessoas[i]->getEspecifico() << endl;
+        }
     }
+    catch (const std::exception &e)
+    {
+        cout << "Erro ao salvar dados: " << e.what() << endl;
+    }
+
     cadastros.close();
 }
 
@@ -822,18 +855,21 @@ int main()
             break;
         case 62:
             // apaga todos os alunos
-            apagaPessoas(pessoas, 1);
+            try
+            {
+                apagaPessoas(pessoas, 1);
+            }
+            catch (const std::exception &e)
+            {
+                cout << "Erro ao apagar dados dos alunos: " << e.what() << endl;
+            }
             break;
         case 71:
             setAniversarioMes(aniversarioMes);
             break;
         case 72:
             // lista os professos aniversariantes do mes
-            listaAniversarios(pessoas, 2, aniversarioMes);
-            break;
-        case 73:
-            // lista os alunos aniversariantes do mes
-            listaAniversarios(pessoas, 1, aniversarioMes);
+            listaAniversarios(pessoas, aniversarioMes);
         }
         op = menu(); // Atualiza a opção
     }
