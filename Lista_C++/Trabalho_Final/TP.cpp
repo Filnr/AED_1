@@ -105,13 +105,6 @@ public:
     {
         return this->titulo;
     }
-    void setProfessor(const string &nome, const string &cpf, const string &titulo, int dia, int mes, int ano)
-    {
-        setNome(nome);
-        setCPF(cpf);
-        setDataNascimento(dia, mes, ano);
-        this->titulo = titulo;
-    }
     void escreve() override
     {
         cout << "----------------------" << endl;
